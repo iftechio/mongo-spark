@@ -428,7 +428,7 @@ object WriteConfig extends MongoOutputConfig {
  * @param shardKey           an optional shardKey in extended json form: `"{key: 1, key2: 1}"`. Used when upserting DataSets in sharded clusters.
  * @param forceInsert        if true forces the writes to be inserts, even if a Dataset contains an `_id` field. Default `false`.
  * @param ordered            configures the bulk operation ordered property. Defaults to true.
- * @param secondLatch        the maxBatchSize when performing a bulk update/insert per second.
+ * @param secondLatch        the maxBatchSize when performing a bulk update/insert per second per partition.
  * @since 1.0
  */
 case class WriteConfig(

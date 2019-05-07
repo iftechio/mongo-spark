@@ -168,7 +168,7 @@ object MongoSpark {
         }
         mongoConnector.withCollectionDo(writeConfig, { collection: MongoCollection[BsonDocument] =>
           iter.grouped(writeConfig.maxBatchSize).foreach(batch => {
-            if (rateLimiter.isDefined){
+            if (rateLimiter.isDefined) {
               rateLimiter.get.acquire(1)
             }
             val requests = batch.map(doc =>
