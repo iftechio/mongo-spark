@@ -137,4 +137,12 @@ trait MongoOutputConfig extends MongoCompanionConfig {
    * @since 2.3
    */
   val orderedProperty = "ordered"
+
+  /**
+    * The maxBatchSize when performing a bulk update/insert per second per partition.
+    *
+    * Default: None
+    * @since jike-1.0.0
+    */
+  val secondLatchProperty = "secondLatch".toLowerCase
 }
