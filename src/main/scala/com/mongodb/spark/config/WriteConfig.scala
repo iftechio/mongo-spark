@@ -251,7 +251,9 @@ object WriteConfig extends MongoOutputConfig {
       forceInsert = getBoolean(cleanedOptions.get(forceInsertProperty), default.map(conf => conf.forceInsert),
         defaultValue = DefaultForceInsert),
       ordered = getBoolean(cleanedOptions.get(orderedProperty), default.map(conf => conf.ordered), DefautOrdered),
-      secondLatch = optionString2Int(cleanedOptions.get(secondLatchProperty).orElse(default.flatMap(conf => conf.secondLatch).orElse(None)))
+      secondLatch = cleanedOptions
+        .get(secondLatchProperty).orElse(default.flatMap(conf => Try(conf.secondLatch.toString).toOption).orElse(None))
+        .flatMap(s => Try(s.toInt).toOption)
     )
   }
 
@@ -435,10 +437,6 @@ object WriteConfig extends MongoOutputConfig {
   override def create(sparkSession: SparkSession): WriteConfig = {
     notNull("sparkSession", sparkSession)
     apply(sparkSession)
-  }
-
-  private def optionString2Int(optionString: Option[String]): Option[Int] = {
-    if (optionString.isEmpty)  Option.empty else Option.apply(optionString.get.toInt)
   }
 }
 
