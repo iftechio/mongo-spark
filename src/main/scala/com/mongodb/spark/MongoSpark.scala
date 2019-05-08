@@ -114,13 +114,25 @@ object MongoSpark {
    * @tparam D the type of the data in the RDD
    */
   def save[D: ClassTag](rdd: RDD[D], writeConfig: WriteConfig): Unit = {
+    println("FUCKING!!! save rdd")
     val mongoConnector = MongoConnector(writeConfig.asOptions)
     rdd.foreachPartition(iter => if (iter.nonEmpty) {
+      var rateLimiter: Option[RateLimiter] = None
+      if (writeConfig.secondLatch.isDefined) {
+        // If secondLatch < maxBatchSize, it will destroy rate limit rule.
+        val permitSize = if (writeConfig.secondLatch.get >= writeConfig.maxBatchSize) (writeConfig.secondLatch.get / writeConfig.maxBatchSize).floor else 1
+        rateLimiter = Option.apply(RateLimiter.create(permitSize))
+      }
       mongoConnector.withCollectionDo(writeConfig, { collection: MongoCollection[D] =>
-        iter.grouped(writeConfig.maxBatchSize).foreach(batch => collection.insertMany(
-          batch.toList.asJava,
-          new InsertManyOptions().ordered(writeConfig.ordered)
-        ))
+        iter.grouped(writeConfig.maxBatchSize).foreach(batch => {
+          if (rateLimiter.isDefined) {
+            rateLimiter.get.acquire(1)
+          }
+          collection.insertMany(
+            batch.toList.asJava,
+            new InsertManyOptions().ordered(writeConfig.ordered)
+          )
+        })
       })
     })
   }
@@ -149,6 +161,7 @@ object MongoSpark {
    * @since 1.1.0
    */
   def save[D](dataset: Dataset[D], writeConfig: WriteConfig): Unit = {
+    println("FUCKING!!! save dataset")
     val mongoConnector = MongoConnector(writeConfig.asOptions)
     val dataSet = dataset.toDF()
     val mapper = rowToDocumentMapper(dataSet.schema)
@@ -159,6 +172,7 @@ object MongoSpark {
     if (writeConfig.forceInsert || !queryKeyList.forall(fieldNames.contains(_))) {
       MongoSpark.save(documentRdd, writeConfig)
     } else {
+      println("FUCKING!!! right path")
       documentRdd.foreachPartition(iter => if (iter.nonEmpty) {
         var rateLimiter: Option[RateLimiter] = None
         if (writeConfig.secondLatch.isDefined) {
