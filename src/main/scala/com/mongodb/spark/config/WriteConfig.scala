@@ -204,6 +204,32 @@ object WriteConfig extends MongoOutputConfig {
       shardKey, forceInsert, ordered)
   }
 
+  /**
+    * Creates a WriteConfig
+    *
+    * @param databaseName      the database name
+    * @param collectionName    the collection name
+    * @param connectionString  the optional connection string used in the creation of this configuration
+    * @param replaceDocument   replaces the whole document, when saving a Dataset that contains an `_id` field.
+    *                          If false only updates / sets the fields declared in the Dataset.
+    * @param maxBatchSize      the maxBatchSize when performing a bulk update/insert. Defaults to 512.
+    * @param localThreshold    the local threshold in milliseconds used when choosing among multiple MongoDB servers to send a request.
+    *                          Only servers whose ping time is less than or equal to the server with the fastest ping time plus the local
+    *                          threshold will be chosen.
+    * @param writeConcern      the WriteConcern to use
+    * @param shardKey          an optional shardKey in extended form: `"{key: 1, key2: 1}"`. Used when upserting DataSets in sharded clusters.
+    * @param forceInsert       if true forces the writes to be inserts, even if a Dataset contains an `_id` field. Default `false`.
+    * @param ordered           configures if the bulk operation is ordered property.
+    * @param secondLatch       the maxBatchSize when performing a bulk update/insert per second per partition.
+    * @return the write config
+    * @since jike-1.0.0
+    */
+  def apply(databaseName: String, collectionName: String, connectionString: Option[String], replaceDocument: Boolean, maxBatchSize: Int,
+            localThreshold: Int, writeConcern: WriteConcern, shardKey: Option[String], forceInsert: Boolean, ordered: Boolean, secondLatch: Option[Int]): WriteConfig = {
+    apply(databaseName, collectionName, connectionString, replaceDocument, maxBatchSize, localThreshold, WriteConcernConfig(writeConcern),
+      shardKey, forceInsert, ordered, secondLatch)
+  }
+
   override def apply(options: collection.Map[String, String], default: Option[WriteConfig]): WriteConfig = {
     val cleanedOptions = stripPrefix(options)
     val cachedConnectionString = connectionString(cleanedOptions)
@@ -224,7 +250,8 @@ object WriteConfig extends MongoOutputConfig {
       shardKey = cleanedOptions.get(shardKeyProperty).orElse(default.flatMap(conf => conf.shardKey).orElse(None)),
       forceInsert = getBoolean(cleanedOptions.get(forceInsertProperty), default.map(conf => conf.forceInsert),
         defaultValue = DefaultForceInsert),
-      ordered = getBoolean(cleanedOptions.get(orderedProperty), default.map(conf => conf.ordered), DefautOrdered)
+      ordered = getBoolean(cleanedOptions.get(orderedProperty), default.map(conf => conf.ordered), DefautOrdered),
+      secondLatch = optionString2Int(cleanedOptions.get(secondLatchProperty).orElse(default.flatMap(conf => conf.secondLatch).orElse(None)))
     )
   }
 
@@ -410,6 +437,9 @@ object WriteConfig extends MongoOutputConfig {
     apply(sparkSession)
   }
 
+  private def optionString2Int(optionString: Option[String]): Option[Int] = {
+    if (optionString.isEmpty)  Option.empty else Option.apply(optionString.get.toInt)
+  }
 }
 
 /**
@@ -451,7 +481,11 @@ case class WriteConfig(
 
   type Self = WriteConfig
 
-  override def withOption(key: String, value: String): WriteConfig = WriteConfig(this.asOptions + (key -> value))
+  override def withOption(key: String, value: String): WriteConfig = {
+    // for test
+    println("Add option, key: " + key + " value: " + value)
+    WriteConfig(this.asOptions + (key -> value))
+  }
 
   override def withOptions(options: collection.Map[String, String]): WriteConfig = WriteConfig(options, Some(this))
 
@@ -462,6 +496,7 @@ case class WriteConfig(
       WriteConfig.forceInsertProperty -> forceInsert.toString) ++ writeConcernConfig.asOptions
     connectionString.map(uri => options += (WriteConfig.mongoURIProperty -> uri))
     shardKey.map(json => options += (WriteConfig.shardKeyProperty -> json))
+    secondLatch.map(number => options += (WriteConfig.secondLatchProperty -> number.toString))
     options.toMap
   }
 

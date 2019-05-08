@@ -1,5 +1,5 @@
 ThisBuild / organization := "com.okjike.data"
-ThisBuild / version := "1.0.0-SNAPSHOT"
+ThisBuild / version := "1.0.1-SNAPSHOT"
 ThisBuild / scalaVersion := "2.11.12"
 
 lazy val sparkVersion = "2.4.0"
