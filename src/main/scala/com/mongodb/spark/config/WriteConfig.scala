@@ -479,11 +479,7 @@ case class WriteConfig(
 
   type Self = WriteConfig
 
-  override def withOption(key: String, value: String): WriteConfig = {
-    // for test
-    println("Add option, key: " + key + " value: " + value)
-    WriteConfig(this.asOptions + (key -> value))
-  }
+  override def withOption(key: String, value: String): WriteConfig = WriteConfig(this.asOptions + (key -> value))
 
   override def withOptions(options: collection.Map[String, String]): WriteConfig = WriteConfig(options, Some(this))
 
