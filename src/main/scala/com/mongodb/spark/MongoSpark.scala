@@ -114,7 +114,6 @@ object MongoSpark {
    * @tparam D the type of the data in the RDD
    */
   def save[D: ClassTag](rdd: RDD[D], writeConfig: WriteConfig): Unit = {
-    println("FUCKING!!! save rdd")
     val mongoConnector = MongoConnector(writeConfig.asOptions)
     rdd.foreachPartition(iter => if (iter.nonEmpty) {
       var rateLimiter: Option[RateLimiter] = None
@@ -161,7 +160,6 @@ object MongoSpark {
    * @since 1.1.0
    */
   def save[D](dataset: Dataset[D], writeConfig: WriteConfig): Unit = {
-    println("FUCKING!!! save dataset")
     val mongoConnector = MongoConnector(writeConfig.asOptions)
     val dataSet = dataset.toDF()
     val mapper = rowToDocumentMapper(dataSet.schema)

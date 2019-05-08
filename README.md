@@ -82,3 +82,7 @@ See the [sbt-spark-package](https://github.com/databricks/sbt-spark-package) plu
 * Ross Lawley          ross@mongodb.com
 
 Additional contributors can be found [here](https://github.com/mongodb/mongo-spark/graphs/contributors).
+
+## JIKE Update
+
+* Add rate limit option to `MongoSpark.save(Datasets, WriteConfig)`
