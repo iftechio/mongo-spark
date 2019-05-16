@@ -10,7 +10,7 @@ node {
         docker.image('sbt-aws:0.0.1').inside("-v /home/jenkins/.ivy2/:/home/jenkins/.ivy2") {
           sh 'cat $AWS_SHARED_CREDENTIALS_FILE'
           sh 'cat $AWS_CREDENTIAL_PROFILES_FILE'
-          if (env.BRANCH_NAME == 'master' || env.BRANCH_NAME == 'v2') {
+          if (env.BRANCH_NAME == 'master') {
             sh 'sbt clean'
             sh 'sbt publish'
           }
@@ -19,3 +19,4 @@ node {
       }
     }
   }
+}
