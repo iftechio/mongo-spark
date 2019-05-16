@@ -34,6 +34,9 @@ lazy val sparkStreaming    = "org.apache.spark" %% "spark-streaming" % sparkVers
 lazy val coreDependencies     = Seq(mongodbDriver, sparkCore, sparkSql, slf4j)
 lazy val testDependencies     = Seq(scalaTest, scalaCheck, scalaMock, junit, junitInterface, sparkStreaming)
 
+import com.amazonaws.auth.{AWSCredentialsProviderChain, DefaultAWSCredentialsProviderChain}
+import com.amazonaws.auth.profile.ProfileCredentialsProvider
+
 
 lazy val root = (project in file("."))
   .settings(
@@ -43,18 +46,21 @@ lazy val root = (project in file("."))
     parallelExecution in Test := false,
     javaOptions ++= Seq("-Xms512M", "-Xmx2048M", "-XX:+CMSClassUnloadingEnabled"),
     publishTo in ThisBuild := {
-      val nexus = "http://maven.ruguoapp.com/nexus/content/repositories/"
+      val nexus = "s3://s3-cn-north-1.amazonaws.com/jike-aws-maven/repositories/"
       if (isSnapshot.value) {
-        Some("snapshots" at nexus + "snapshots")
+        Some("aws-snapshots" at nexus + "snapshots")
       } else {
-        Some("releases"  at nexus + "releases")
+        Some("aws-releases"  at nexus + "releases")
       }
     },
-    credentials += Credentials(
-      "Sonatype Nexus Repository Manager",
-      "maven.ruguoapp.com",
-      "deployment",
-      "deployment123"),
-    publishMavenStyle := true,
+    s3CredentialsProvider := { bucket: String =>
+      new AWSCredentialsProviderChain(
+        // This will first check system environment $AWS_CREDENTIAL_PROFILES_FILE,
+        // If not set, use default location (~/.aws/credentials).
+        // If you want to publish on your local machine, please push your AWS credential file to "~/.aws/credentials"
+        new ProfileCredentialsProvider(),
+        DefaultAWSCredentialsProviderChain.getInstance()
+      )
+    },
     scalacOptions in (Compile, doc) ++= Seq("-groups")
   )
