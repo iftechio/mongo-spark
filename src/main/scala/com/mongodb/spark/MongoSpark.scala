@@ -114,7 +114,6 @@ object MongoSpark {
    * @tparam D the type of the data in the RDD
    */
   def save[D: ClassTag](rdd: RDD[D], writeConfig: WriteConfig): Unit = {
-    println("FUCKING!!! save rdd")
     val mongoConnector = MongoConnector(writeConfig.asOptions)
     rdd.foreachPartition(iter => if (iter.nonEmpty) {
       var rateLimiter: Option[RateLimiter] = None
@@ -161,7 +160,7 @@ object MongoSpark {
    * @since 1.1.0
    */
   def save[D](dataset: Dataset[D], writeConfig: WriteConfig): Unit = {
-    println("FUCKING!!! save dataset")
+    println("Enter save dataset function.")
     val mongoConnector = MongoConnector(writeConfig.asOptions)
     val dataSet = dataset.toDF()
     val mapper = rowToDocumentMapper(dataSet.schema)
@@ -170,9 +169,10 @@ object MongoSpark {
     val queryKeyList = BsonDocument.parse(writeConfig.shardKey.getOrElse("{_id: 1}")).keySet().asScala.toList
 
     if (writeConfig.forceInsert || !queryKeyList.forall(fieldNames.contains(_))) {
+      println("Enter insert many branch.")
       MongoSpark.save(documentRdd, writeConfig)
     } else {
-      println("FUCKING!!! right path")
+      println("Enter replace or upsert or insert branch.")
       documentRdd.foreachPartition(iter => if (iter.nonEmpty) {
         var rateLimiter: Option[RateLimiter] = None
         if (writeConfig.secondLatch.isDefined) {
