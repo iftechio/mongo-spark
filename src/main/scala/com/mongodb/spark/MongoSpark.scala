@@ -32,7 +32,7 @@ import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, DataFrameReader, DataFrameWriter, Dataset, Encoders, SQLContext, SparkSession}
 import org.bson.conversions.Bson
 import org.bson.{BsonDocument, Document}
-import org.spark_project.guava.util.concurrent.RateLimiter
+import com.google.common.util.concurrent.RateLimiter
 
 import scala.collection.JavaConverters._
 import scala.reflect.ClassTag
